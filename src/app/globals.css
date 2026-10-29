@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0d14;
+  --color-surface: #151923;
+  --color-elevated: #202534;
+  --color-fg: #f8fafc;
+  --color-muted: #9ca3af;
+  --color-primary: #8b5cf6;
+  --color-primary-strong: #7c3aed;
+  --color-border: rgb(255 255 255 / 0.08);
+  --color-success: #34d399;
+  --color-danger: #f87171;
+
+  --color-common: #3178d4;
+  --color-curious: #278654;
+  --color-challenge: #e98530;
+  --color-legendary: #7440ab;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 24px;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+    border-radius: 12px;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+}
+
+@utility pt-safe {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+/* ---------- Card visuals ---------- */
+
+.card-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Subtle diamond texture for card backs. */
+.card-texture {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgb(255 255 255 / 0.22), transparent 55%),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.05) 0 2px, transparent 2px 14px),
+    repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.05) 0 2px, transparent 2px 14px);
+}
+
+.card-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+}
+
+/* Curious: diagonal shimmer sweep. */
+.fx-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.28) 48%, transparent 66%);
+  background-size: 250% 100%;
+  animation: shimmer 3.6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes shimmer {
+  0% { background-position: 130% 0; }
+  60%, 100% { background-position: -130% 0; }
+}
+
+/* Legendary: rotating aurora border. */
+.fx-aurora {
+  --angle: 0deg;
+}
+.fx-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--radius-card) + 2px);
+  padding: 2px;
+  background: conic-gradient(from var(--angle), #a78bfa, #f0abfc, #fde68a, #67e8f9, #a78bfa);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: aurora-spin 5s linear infinite;
+  pointer-events: none;
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes aurora-spin {
+  to { --angle: 360deg; }
+}
+
+/* Floating particles (challenge sparks / legendary stars). */
+.particle {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  animation: float-up var(--dur, 4s) ease-in infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  20% { opacity: 0.9; }
+  100% { transform: translateY(-140px) scale(1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-shimmer::after,
+  .fx-aurora::before,
+  .particle {
+    animation: none !important;
+  }
+  .particle { display: none; }
+}
+
+[data-reduced-motion="true"] .fx-shimmer::after,
+[data-reduced-motion="true"] .fx-aurora::before {
+  animation: none !important;
+}
+[data-reduced-motion="true"] .particle {
+  display: none;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+@media (min-width: 640px) {
+  @keyframes sheet-up {
+    from { transform: translateY(-46%) scale(0.96); opacity: 0; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-state="open"] { animation-duration: 1ms !important; }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
