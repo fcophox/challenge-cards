@@ -126,7 +126,7 @@ export function CardDeck({ onAccepted }: { onAccepted: (attemptId: string) => vo
       </div>
 
       <section aria-label="Mazo de cartas" className="relative min-h-0 flex-1 [container-type:size]">
-        <div className="absolute left-1/2 top-[46%] [container-type:size] h-[min(100cqh-28px,(100cqw-8px)*4/3)] w-[min(100cqw-8px,(100cqh-28px)*3/4)] -translate-x-1/2 -translate-y-1/2">
+        <div className="absolute left-1/2 top-1/2 [container-type:size] h-[min(100cqh-28px,(100cqw-8px)*16/9)] w-[min(100cqw-8px,(100cqh-28px)*9/16)] -translate-x-1/2 -translate-y-1/2">
           {deck.queue
             .slice(0, 3)
             .map((id, index) => {
@@ -188,7 +188,7 @@ export function CardDeck({ onAccepted }: { onAccepted: (attemptId: string) => vo
 function DeckSkeleton() {
   return (
     <div className="flex flex-1 items-center justify-center" role="status" aria-label="Cargando mazo">
-      <div className="aspect-[3/4] w-[min(80vw,340px)] animate-pulse rounded-[var(--radius-card)] bg-surface" />
+      <div className="aspect-[9/16] h-[min(68dvh,600px)] animate-pulse rounded-[var(--radius-card)] bg-surface" />
     </div>
   );
 }

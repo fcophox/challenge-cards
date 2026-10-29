@@ -129,7 +129,7 @@ export function Collection() {
                     type="button"
                     onClick={() => setSelected(c)}
                     style={rarityVars(c.rarity)}
-                    className="relative flex aspect-[3/4] w-full flex-col overflow-hidden rounded-2xl border border-[color-mix(in_oklab,var(--rc)_60%,transparent)] bg-surface p-2 text-left transition hover:-translate-y-0.5"
+                    className="relative flex aspect-[9/16] w-full flex-col overflow-hidden rounded-2xl border border-[color-mix(in_oklab,var(--rc)_60%,transparent)] bg-surface p-2 text-left transition hover:-translate-y-0.5"
                     aria-label={`${c.title}. ${RARITIES[c.rarity].name}.${done ? ` Completada ${done} ${done === 1 ? "vez" : "veces"}.` : ""}`}
                   >
                     <span className="absolute inset-x-0 top-0 h-1/3 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--rc)_50%,transparent),transparent)]" />
@@ -144,7 +144,7 @@ export function Collection() {
                 ) : (
                   <div
                     style={rarityVars(c.rarity)}
-                    className="card-texture grid aspect-[3/4] w-full place-items-center rounded-2xl border border-dashed border-[color-mix(in_oklab,var(--rc)_60%,transparent)] bg-[color-mix(in_oklab,var(--rc)_24%,#151923)]"
+                    className="card-texture grid aspect-[9/16] w-full place-items-center rounded-2xl border border-dashed border-[color-mix(in_oklab,var(--rc)_60%,transparent)] bg-[color-mix(in_oklab,var(--rc)_24%,#151923)]"
                     role="img"
                     aria-label={`Carta ${RARITIES[c.rarity].name.toLowerCase()} por descubrir`}
                   >
@@ -162,7 +162,7 @@ export function Collection() {
           <SheetContent>
             <div className="overflow-y-auto px-5 pb-5 pt-12">
               <SheetTitle className="sr-only">{selected.title}</SheetTitle>
-              <div className="relative mx-auto aspect-[3/4] w-full max-w-[300px] [container-type:size]">
+              <div className="relative mx-auto aspect-[9/16] w-[min(100%,280px,calc((92dvh-220px)*9/16))] [container-type:size]">
                 <CardFront challenge={selected} />
               </div>
               <SheetDescription className="mt-4 text-center">

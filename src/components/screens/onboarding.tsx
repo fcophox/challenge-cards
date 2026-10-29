@@ -69,7 +69,7 @@ export function Onboarding() {
             transition={{ duration: 0.25 }}
             className="flex flex-col items-center"
           >
-            <div className="relative mb-10 h-56 w-44">
+            <div className="relative mb-10 h-64 w-36">
               {[2, 1, 0].map((i) => (
                 <motion.div
                   key={i}
