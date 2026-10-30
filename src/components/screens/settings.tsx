@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useAccountSync } from "@/hooks/use-account-sync";
+import { useActiveVersion } from "@/hooks/use-active-version";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import type { UserSettings } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function SettingsScreen() {
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const settings = snapshot?.settings;
+  const version = useActiveVersion();
 
   const update = (patch: Partial<UserSettings>) => void engine.updateSettings(patch);
 
@@ -122,7 +124,7 @@ export function SettingsScreen() {
           </div>
         </Group>
 
-        <p className="text-center text-xs text-muted">Challenge Cards · MVP 0.1</p>
+        <p className="text-center text-xs text-muted">Challenge Cards · Versión {version}</p>
       </div>
 
       <Sheet open={confirmDelete} onOpenChange={setConfirmDelete}>

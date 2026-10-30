@@ -47,6 +47,15 @@ npm run build && npm start   # http://localhost:3000
 
 Con Supabase configurado, los retos se leen de la tabla `challenges`: al editar una fila, la app la recibe la próxima vez que se abra con conexión. La última copia se guarda en IndexedDB para jugar sin conexión, y `src/data/challenges.ts` sirve de catálogo inicial y de respaldo. Las rarezas, categorías y dificultades siguen definidas en `src/lib/game/config.ts`: una fila con un valor desconocido se ignora. Para retirar un reto usa `available = false` en lugar de borrarlo, porque otras tablas lo referencian.
 
+## Panel de administración
+
+`/admin` tiene dos pestañas. **Versión** permite crear versiones y elegir la activa, que se muestra en Configuración. **Retos** permite editar, crear y retirar retos. No aparece en la navegación. El acceso real lo imponen las políticas RLS de Supabase: solo las cuentas en `admin_users` pueden escribir en `challenges`. Para añadir una, crea el usuario en Supabase → Authentication y ejecuta en el SQL Editor:
+
+```sql
+insert into public.admin_users (user_id)
+select id from auth.users where email = 'correo@ejemplo.com';
+```
+
 ## Persistencia y cuenta
 
 Por defecto todo se guarda en **IndexedDB** en el dispositivo (modo invitado). No hay sincronización remota mientras Supabase no esté configurado; la app lo indica claramente en Configuración.

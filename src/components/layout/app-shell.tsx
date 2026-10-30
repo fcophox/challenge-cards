@@ -8,7 +8,7 @@ import { BottomNav } from "./bottom-nav";
 import { SidePanels } from "./side-panels";
 import { Toaster } from "./toaster";
 
-const NO_CHROME = ["/bienvenida", "/offline"];
+const NO_CHROME = ["/bienvenida", "/offline", "/admin"];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { snapshot, error } = useGame();
