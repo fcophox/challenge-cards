@@ -14,7 +14,7 @@ export const RARITY_ICONS: Record<RarityId, LucideIcon> = {
 
 export const EVIDENCE_META: Record<EvidenceType, { icon: LucideIcon; label: string }> = {
   confirmation: { icon: CheckCircle2, label: "Confirmación" },
-  photo: { icon: Camera, label: "Foto opcional" },
+  photo: { icon: Camera, label: "Foto o video opcional" },
   text: { icon: PenLine, label: "Nota opcional" },
   none: { icon: CircleDashed, label: "Sin evidencia" },
 };

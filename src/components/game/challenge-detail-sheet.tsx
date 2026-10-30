@@ -2,15 +2,15 @@
 
 import { PointsIcon } from "@/components/game/points-icon";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {Clock, Flag, ImagePlus, Lock, Trash2, Trophy} from "lucide-react";
+import {Clock, Flag, Camera, Images, Lock, Trash2, Trophy, Video} from "lucide-react";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useGame } from "@/components/providers/game-provider";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { CATEGORIES, DIFFICULTIES } from "@/lib/game/config";
-import type { ChallengeAttempt } from "@/lib/game/types";
-import { completionSchema, sanitizeImage, type CompletionForm } from "@/lib/evidence";
+import type { ChallengeAttempt, ChallengeEvidence } from "@/lib/game/types";
+import { completionSchema, isVideoFile, mediaSchema, sanitizeImage, type CompletionForm } from "@/lib/evidence";
 import { cn, formatDate, formatMinutes } from "@/lib/utils";
 import { EVIDENCE_META, RarityBadge, rarityVars } from "./rarity";
 
@@ -103,30 +103,46 @@ function CompleteForm({ attempt, onDone }: { attempt: ChallengeAttempt; onDone: 
   const [preview, setPreview] = useState<string | null>(null);
   const [confirmAbandon, setConfirmAbandon] = useState(false);
   const {
-    control,
     register,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<CompletionForm>({
     resolver: zodResolver(completionSchema),
     defaultValues: { confirmed: false as unknown as true },
   });
-  const photo = watch("photo");
+  const media = watch("media");
 
   useEffect(() => {
-    if (!photo) return setPreview(null);
-    const url = URL.createObjectURL(photo);
+    if (!media) return setPreview(null);
+    const url = URL.createObjectURL(media);
     setPreview(url);
     return () => URL.revokeObjectURL(url);
-  }, [photo]);
+  }, [media]);
+
+  function pickMedia(file: File | undefined) {
+    if (!file) return;
+    const parsed = mediaSchema.safeParse(file);
+    if (parsed.success) {
+      clearErrors("media");
+      setValue("media", file);
+    } else {
+      setValue("media", undefined);
+      setError("media", { message: parsed.error.issues[0]?.message });
+    }
+  }
 
   async function onSubmit(values: CompletionForm) {
     try {
       let evidence;
-      if (values.photo) {
-        const blob = await sanitizeImage(values.photo);
+      if (values.media && isVideoFile(values.media)) {
+        const { media: file } = values;
+        evidence = { kind: "video" as const, blob: file, mimeType: file.type, size: file.size };
+      } else if (values.media) {
+        const blob = await sanitizeImage(values.media);
         evidence = { kind: "photo" as const, blob, mimeType: blob.type, size: blob.size };
       } else if (values.note) {
         evidence = { kind: "text" as const, text: values.note };
@@ -139,7 +155,7 @@ function CompleteForm({ attempt, onDone }: { attempt: ChallengeAttempt; onDone: 
       onDone();
     } catch (e) {
       console.error(e);
-      toast({ title: "No se pudo completar", description: "Revisa la imagen e inténtalo de nuevo.", tone: "error" });
+      toast({ title: "No se pudo completar", description: "Revisa el archivo e inténtalo de nuevo.", tone: "error" });
     }
   }
 
@@ -160,40 +176,37 @@ function CompleteForm({ attempt, onDone }: { attempt: ChallengeAttempt; onDone: 
             <Lock className="size-3.5 text-muted" aria-hidden />
             <span className="font-normal text-muted">Privada, solo en tu dispositivo</span>
           </span>
-          {preview ? (
+          {preview && media ? (
             <div className="relative overflow-hidden rounded-2xl border border-border">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
-              <img src={preview} alt="Vista previa de tu evidencia" className="max-h-60 w-full object-cover" />
+              {isVideoFile(media) ? (
+                <video src={preview} controls playsInline preload="metadata" aria-label="Vista previa de tu video" className="max-h-60 w-full bg-black" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- local object URL
+                <img src={preview} alt="Vista previa de tu evidencia" className="max-h-60 w-full object-cover" />
+              )}
               <Button
                 type="button"
                 size="sm"
                 variant="secondary"
                 className="absolute right-2 top-2"
-                onClick={() => setValue("photo", undefined)}
+                onClick={() => setValue("media", undefined)}
               >
                 <Trash2 aria-hidden /> Quitar
               </Button>
             </div>
           ) : (
-            <label className="flex h-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-border bg-white/[0.02] text-sm text-muted transition hover:border-primary/50 hover:text-fg focus-within:outline-2 focus-within:outline-primary">
-              <ImagePlus className="size-6" aria-hidden />
-              Añadir foto (opcional)
-              <Controller
-                control={control}
-                name="photo"
-                render={({ field }) => (
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/heic"
-                    capture="environment"
-                    className="sr-only"
-                    onChange={(e) => field.onChange(e.target.files?.[0] ?? undefined)}
-                  />
-                )}
-              />
-            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <MediaOption icon={<Camera />} label="Tomar foto" accept="image/*" capture onPick={pickMedia} />
+              <MediaOption icon={<Video />} label="Grabar video" accept="video/*" capture onPick={pickMedia} />
+              <MediaOption icon={<Images />} label="Galería" accept="image/*,video/*" onPick={pickMedia} />
+            </div>
           )}
-          {errors.photo && <p className="mt-1 text-sm text-danger" role="alert">{errors.photo.message}</p>}
+          {media && isVideoFile(media) && (
+            <p className="mt-2 text-xs text-muted">
+              El video se guarda tal como se grabó, con sus metadatos (pueden incluir la ubicación).
+            </p>
+          )}
+          {errors.media && <p className="mt-1 text-sm text-danger" role="alert">{errors.media.message}</p>}
         </div>
       )}
 
@@ -242,9 +255,42 @@ function CompleteForm({ attempt, onDone }: { attempt: ChallengeAttempt; onDone: 
   );
 }
 
+function MediaOption({
+  icon,
+  label,
+  accept,
+  capture,
+  onPick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  accept: string;
+  /** Opens the device camera directly on phones; desktops show a file picker. */
+  capture?: boolean;
+  onPick: (file: File | undefined) => void;
+}) {
+  return (
+    <label className="flex h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-border bg-white/[0.02] text-center text-xs font-medium text-muted transition hover:border-primary/50 hover:text-fg focus-within:outline-2 focus-within:outline-primary [&_svg]:size-6">
+      <span aria-hidden>{icon}</span>
+      {label}
+      <input
+        type="file"
+        accept={accept}
+        capture={capture ? "environment" : undefined}
+        className="sr-only"
+        onChange={(e) => {
+          onPick(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+    </label>
+  );
+}
+
 function CompletedInfo({ attempt }: { attempt: ChallengeAttempt }) {
   const { engine } = useGame();
   const [url, setUrl] = useState<string | null>(null);
+  const [kind, setKind] = useState<ChallengeEvidence["kind"] | null>(null);
   const [text, setText] = useState<string | null>(null);
 
   useEffect(() => {
@@ -255,6 +301,7 @@ function CompletedInfo({ attempt }: { attempt: ChallengeAttempt }) {
         if (cancelled || !ev) return;
         if (ev.blob) {
           objectUrl = URL.createObjectURL(ev.blob);
+          setKind(ev.kind);
           setUrl(objectUrl);
         } else if (ev.text) setText(ev.text);
       });
@@ -279,8 +326,11 @@ function CompletedInfo({ attempt }: { attempt: ChallengeAttempt }) {
           <p className="mb-2 flex items-center gap-1.5 text-xs text-muted">
             <Lock className="size-3" aria-hidden /> Tu evidencia privada
           </p>
+          {url && kind === "video" && (
+            <video src={url} controls playsInline preload="metadata" aria-label="Video de evidencia" className="max-h-60 w-full rounded-xl bg-black" />
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
-          {url && <img src={url} alt="Evidencia del reto" className="max-h-60 w-full rounded-xl object-cover" />}
+          {url && kind === "photo" && <img src={url} alt="Evidencia del reto" className="max-h-60 w-full rounded-xl object-cover" />}
           {text && <p className="whitespace-pre-wrap text-[15px]">{text}</p>}
           <Button
             variant="danger"

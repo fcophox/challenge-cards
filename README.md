@@ -38,7 +38,7 @@ npm run build && npm start   # http://localhost:3000
 - **Mazo** con 3 cartas apiladas, volteo 3D, swipe con física spring, sellos de feedback, botones alternativos y teclado (Enter/Espacio revela, ← rechaza, → acepta).
 - **4 rarezas** (Común 55 %, Curiosa 25 %, Desafío 15 %, Legendaria 5 %) con efectos propios: brillo, chispas, borde aurora y destello especial al revelar una legendaria.
 - **60 retos originales** en español (30/15/10/5) en `src/data/challenges.ts`.
-- **Detalle del reto**: instrucciones, recompensa, tiempo, dificultad, evidencia opcional (foto o nota), completar con confirmación explícita o abandonar.
+- **Detalle del reto**: instrucciones, recompensa, tiempo, dificultad, evidencia opcional (foto o video desde la cámara o la galería, o nota), completar con confirmación explícita o abandonar.
 - **Recompensa animada**, subida de nivel y logros desbloqueados.
 - **Mis retos** (pendientes / completados / abandonados), **Colección** (60 huecos, filtros por rareza, estado y categoría, sin revelar contenido no descubierto), **Perfil** (nivel, XP, saldo, estadísticas, racha, logros, historial de puntos) y **Configuración** (sonido, vibración, animaciones reducidas, instalación, privacidad, exportar y borrar datos, cuenta opcional).
 - **PWA**: manifest, íconos 192/512 + maskable, service worker con página offline e instrucciones de instalación para iOS, Android y escritorio.

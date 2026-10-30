@@ -71,6 +71,7 @@ Cada intento/descubrimiento modificado localmente queda marcado `dirty`. Con ses
 ## Privacidad
 
 - Las fotos se re-codifican en un canvas (máx. 1600 px, WebP): se eliminan metadatos EXIF como la ubicación GPS. Validación con Zod de tipo (JPG/PNG/WebP/HEIC) y tamaño (≤ 8 MB).
+- Los videos (MP4, MOV, WebM o 3GP, ≤ 100 MB) se guardan sin re-codificar en IndexedDB, por lo que conservan sus metadatos; la interfaz lo avisa. Antes de subirlos a Storage habría que limpiarlos y ampliar el `kind`, los tipos y el tamaño de `challenge_evidence` y del bucket.
 - Evidencias privadas por defecto (`visibility = 'private'` forzado por constraint), eliminables individualmente o junto con todos los datos.
 - Exportación JSON de todos los datos (sin binarios de fotos).
 - Sin funciones sociales ni publicación de evidencias.

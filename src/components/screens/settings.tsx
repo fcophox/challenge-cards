@@ -46,7 +46,7 @@ export function SettingsScreen() {
     a.download = `challenge-cards-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast({ title: "Datos exportados", description: "Las fotos no se incluyen en el archivo.", tone: "success" });
+    toast({ title: "Datos exportados", description: "Las fotos y videos no se incluyen en el archivo.", tone: "success" });
   }
 
   async function wipe() {
@@ -101,8 +101,9 @@ export function SettingsScreen() {
             <div>
               <p className="font-semibold">Tus evidencias son privadas</p>
               <p className="mt-1 text-muted">
-                Las fotos y notas se guardan solo en este dispositivo, se reducen de tamaño y se les quitan los metadatos
-                (como la ubicación). No hay funciones sociales ni publicaciones.
+                Las fotos, videos y notas se guardan solo en este dispositivo. A las fotos se les reduce el tamaño y se les
+                quitan los metadatos (como la ubicación); los videos se guardan tal como se grabaron. No hay funciones
+                sociales ni publicaciones.
               </p>
             </div>
           </div>

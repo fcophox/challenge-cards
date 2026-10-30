@@ -103,7 +103,7 @@ export interface CardDiscovery {
 export interface ChallengeEvidence {
   id: string;
   attemptId: string;
-  kind: "photo" | "text";
+  kind: "photo" | "video" | "text";
   mimeType?: string;
   size?: number;
   text?: string;
