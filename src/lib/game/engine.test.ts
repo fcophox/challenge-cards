@@ -2,6 +2,7 @@ import "fake-indexeddb/auto";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CHALLENGES, CHALLENGES_BY_ID } from "../../data/challenges.ts";
+import { parseCatalogRows } from "../catalog/remote-catalog.ts";
 import { IndexedDbGameRepository } from "../repositories/indexeddb.ts";
 import { RARITIES } from "./config.ts";
 import { createDeck, drawOne, fillQueue, popTop } from "./deck.ts";
@@ -118,6 +119,37 @@ test("progress survives a reload (new engine on same DB)", async () => {
   assert.deepEqual(after.ledger, before.ledger);
   assert.deepEqual(after.deck.queue, before.deck.queue);
   assert.equal(after.attempts[0]!.status, "completed");
+});
+
+test("remote catalogue rows are mapped and invalid ones skipped", () => {
+  const row = {
+    id: "x1", title: "Reto remoto", description: "d", instructions: ["a"], category: "objetos", rarity_id: "common",
+    difficulty: "easy", points: 77, estimated_minutes: 3, evidence_type: "photo", available: true, tags: [], created_at: "2026-10-30",
+  };
+  const parsed = parseCatalogRows([row, { ...row, id: "x2", rarity_id: "mythic" }, null]);
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0]!.rarity, "common");
+  assert.equal(parsed[0]!.estimatedMinutes, 3);
+});
+
+test("catalogue update reprices rewards, retires cards and survives a reload", async () => {
+  const { engine, repo } = await makeEngine(11);
+  const top = engine.getSnapshot()!.deck.queue[0]!;
+  await engine.reveal(top);
+  const attempt = await engine.accept(top);
+
+  const queued = engine.getSnapshot()!.deck.queue[0]!;
+  const incoming = CHALLENGES.filter((c) => c.id !== queued).map((c) => (c.id === top ? { ...c, points: 77 } : c));
+  await engine.updateCatalog(incoming);
+
+  assert.equal(engine.getChallenge(queued)?.available, false);
+  assert.ok(!engine.getSnapshot()!.deck.queue.includes(queued));
+  assert.equal((await engine.complete(attempt.id)).pointsAwarded, 77);
+
+  const reloaded = new GameEngine(repo, CHALLENGES, mulberry32(12));
+  await reloaded.load();
+  assert.equal(reloaded.getChallenge(top)?.points, 77);
+  assert.equal(reloaded.getChallenge(queued)?.available, false);
 });
 
 test("levels and streaks", () => {

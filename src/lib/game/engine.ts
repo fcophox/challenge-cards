@@ -58,9 +58,9 @@ export class GameEngine {
   private snapshot: GameSnapshot | null = null;
   private listeners = new Set<Listener>();
   private chain: Promise<unknown> = Promise.resolve();
-  private readonly catalogById: ReadonlyMap<string, Challenge>;
+  private catalogById: ReadonlyMap<string, Challenge>;
   private readonly repo: GameRepository;
-  private readonly catalog: readonly Challenge[];
+  private catalog: readonly Challenge[];
   private readonly rng: Rng;
   private readonly clock: () => Date;
 
@@ -81,6 +81,39 @@ export class GameEngine {
 
   getChallenge(id: string) {
     return this.catalogById.get(id);
+  }
+
+  getCatalog() {
+    return this.catalog;
+  }
+
+  /**
+   * Cards missing from `incoming` stay known but unavailable: pending attempts
+   * and the collection still need their text and reward.
+   */
+  private applyCatalog(incoming: readonly Challenge[]) {
+    const ids = new Set(incoming.map((c) => c.id));
+    const retired = this.catalog.filter((c) => !ids.has(c.id)).map((c) => ({ ...c, available: false }));
+    this.catalog = [...incoming, ...retired];
+    this.catalogById = new Map(this.catalog.map((c) => [c.id, c]));
+    this.repo.setCatalog(this.catalogById);
+  }
+
+  /** Installs a newer catalogue and removes queued cards that are no longer available. */
+  updateCatalog(incoming: Challenge[]): Promise<void> {
+    return this.run(async () => {
+      if (incoming.length === 0) return;
+      this.applyCatalog(incoming);
+      await this.repo.saveCatalog([...this.catalog]);
+      const s = this.state;
+      const queue = s.deck.queue.filter((id) => this.catalogById.get(id)?.available);
+      const deck = fillQueue(
+        { ...s.deck, queue, revealed: s.deck.revealed.filter((id) => queue.includes(id)) },
+        this.deckContext(s),
+      );
+      await this.repo.saveDeck(deck);
+      this.set({ ...s, deck });
+    });
   }
 
   private set(next: GameSnapshot) {
@@ -115,6 +148,8 @@ export class GameEngine {
 
   load(): Promise<GameSnapshot> {
     return this.run(async () => {
+      const cached = await this.repo.loadCatalog();
+      if (cached?.length) this.applyCatalog(cached);
       let s = await this.repo.load();
       if (!s) {
         const at = this.now();

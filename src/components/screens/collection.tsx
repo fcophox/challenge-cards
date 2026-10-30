@@ -8,7 +8,6 @@ import { TopBar } from "@/components/layout/top-bar";
 import { useGame } from "@/components/providers/game-provider";
 import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { CHALLENGES } from "@/data/challenges";
 import { CATEGORIES, RARITIES, RARITY_ORDER } from "@/lib/game/config";
 import type { CategoryId, Challenge, RarityId } from "@/lib/game/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -19,7 +18,7 @@ const selectClass =
   "h-10 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-fg focus:border-primary focus:outline-none";
 
 export function Collection() {
-  const { snapshot } = useGame();
+  const { snapshot, engine } = useGame();
   const [rarity, setRarity] = useState<RarityId | "all">("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [category, setCategory] = useState<CategoryId | "all">("all");
@@ -35,7 +34,10 @@ export function Collection() {
     return m;
   }, [snapshot?.attempts]);
 
-  const visible = CHALLENGES.filter((c) => {
+  // Retired cards only stay in the album of whoever already found them.
+  const catalog = engine.getCatalog().filter((c) => c.available || discovered.has(c.id));
+
+  const visible = catalog.filter((c) => {
     const isFound = discovered.has(c.id);
     if (rarity !== "all" && c.rarity !== rarity) return false;
     // Category is part of the hidden content: filtering by it only shows discovered cards.
@@ -46,7 +48,7 @@ export function Collection() {
     return true;
   });
 
-  const total = CHALLENGES.length;
+  const total = catalog.length;
   const found = discovered.size;
 
   return (
@@ -64,7 +66,7 @@ export function Collection() {
           <Progress className="mt-3" value={found / total} label="Cartas descubiertas" />
           <ul className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
             {RARITY_ORDER.map((r) => {
-              const all = CHALLENGES.filter((c) => c.rarity === r);
+              const all = catalog.filter((c) => c.rarity === r);
               const got = all.filter((c) => discovered.has(c.id)).length;
               return (
                 <li key={r} className="rounded-xl bg-white/5 py-2" style={rarityVars(r)}>

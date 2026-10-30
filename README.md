@@ -43,6 +43,10 @@ npm run build && npm start   # http://localhost:3000
 - **Mis retos** (pendientes / completados / abandonados), **Colección** (60 huecos, filtros por rareza, estado y categoría, sin revelar contenido no descubierto), **Perfil** (nivel, XP, saldo, estadísticas, racha, logros, historial de puntos) y **Configuración** (sonido, vibración, animaciones reducidas, instalación, privacidad, exportar y borrar datos, cuenta opcional).
 - **PWA**: manifest, íconos 192/512 + maskable, service worker con página offline e instrucciones de instalación para iOS, Android y escritorio.
 
+## Catálogo de retos
+
+Con Supabase configurado, los retos se leen de la tabla `challenges`: al editar una fila, la app la recibe la próxima vez que se abra con conexión. La última copia se guarda en IndexedDB para jugar sin conexión, y `src/data/challenges.ts` sirve de catálogo inicial y de respaldo. Las rarezas, categorías y dificultades siguen definidas en `src/lib/game/config.ts`: una fila con un valor desconocido se ignora. Para retirar un reto usa `available = false` en lugar de borrarlo, porque otras tablas lo referencian.
+
 ## Persistencia y cuenta
 
 Por defecto todo se guarda en **IndexedDB** en el dispositivo (modo invitado). No hay sincronización remota mientras Supabase no esté configurado; la app lo indica claramente en Configuración.
@@ -53,10 +57,9 @@ Por defecto todo se guarda en **IndexedDB** en el dispositivo (modo invitado). N
 2. Aplica las migraciones y el seed:
    ```bash
    supabase link --project-ref <ref>
-   supabase db push
-   psql "$SUPABASE_DB_URL" -f supabase/seed.sql
+   supabase db push --include-seed
    ```
-3. Copia `.env.example` a `.env.local` y rellena `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Copia `.env.example` a `.env.local` y rellena `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 4. En Supabase → Authentication → URL Configuration añade `http://localhost:3000/ajustes` (y tu dominio) como redirect URL del enlace mágico.
 5. Reinicia la app. En **Configuración → Cuenta** aparece el acceso por correo. Al entrar, el progreso local se migra con la RPC `sync_progress` y se vuelve a sincronizar automáticamente al recuperar la conexión.
 

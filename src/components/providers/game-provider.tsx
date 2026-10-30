@@ -12,9 +12,11 @@ import {
   type ReactNode,
 } from "react";
 import { CHALLENGES, CHALLENGES_BY_ID } from "@/data/challenges";
+import { fetchRemoteCatalog } from "@/lib/catalog/remote-catalog";
 import { GameEngine, type CompletionOutcome } from "@/lib/game/engine";
 import type { GameSnapshot } from "@/lib/game/types";
 import { IndexedDbGameRepository } from "@/lib/repositories/indexeddb";
+import { getSupabase } from "@/lib/supabase/client";
 import { playSfx, vibrate } from "@/lib/feedback";
 import { useReducedMotionPreference } from "@/hooks/use-reduced-motion";
 
@@ -64,6 +66,25 @@ export function GameProvider({ children }: { children: ReactNode }) {
         );
       });
     }
+  }, [engine]);
+
+  // The bundled/cached catalogue keeps the game playable if this fails or is offline.
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    const refresh = async () => {
+      try {
+        const catalog = await fetchRemoteCatalog(supabase);
+        await ready;
+        await engine.updateCatalog(catalog);
+      } catch (e) {
+        console.warn("No se pudo actualizar el catálogo", e);
+      }
+    };
+    const ready = engine.getSnapshot() ? Promise.resolve() : engine.load();
+    void refresh();
+    window.addEventListener("online", refresh);
+    return () => window.removeEventListener("online", refresh);
   }, [engine]);
 
   const reducedMotion = useReducedMotionPreference(snapshot?.settings.reducedMotion ?? "system");

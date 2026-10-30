@@ -18,8 +18,8 @@ import type { CompleteResult, EvidenceInput, ExportBundle, GameRepository, Synce
 
 interface Schema extends DBSchema {
   kv: {
-    key: "profile" | "settings" | "deck";
-    value: UserProfile | UserSettings | DeckState;
+    key: "profile" | "settings" | "deck" | "catalog";
+    value: UserProfile | UserSettings | DeckState | Challenge[];
   };
   attempts: { key: string; value: ChallengeAttempt; indexes: { byStatus: string } };
   ledger: { key: string; value: PointsLedgerEntry; indexes: { byKey: string } };
@@ -41,7 +41,7 @@ export class AttemptNotFoundError extends Error {
 export class IndexedDbGameRepository implements GameRepository {
   readonly kind = "local" as const;
   private dbPromise: Promise<IDBPDatabase<Schema>> | null = null;
-  private readonly catalog: ReadonlyMap<string, Challenge>;
+  private catalog: ReadonlyMap<string, Challenge>;
   private readonly dbName: string;
 
   constructor(catalog: ReadonlyMap<string, Challenge>, dbName = DB_NAME) {
@@ -85,6 +85,18 @@ export class IndexedDbGameRepository implements GameRepository {
       discoveries,
       achievements,
     };
+  }
+
+  async loadCatalog() {
+    return ((await (await this.db()).get("kv", "catalog")) as Challenge[] | undefined) ?? null;
+  }
+
+  async saveCatalog(catalog: Challenge[]) {
+    await (await this.db()).put("kv", catalog, "catalog");
+  }
+
+  setCatalog(catalog: ReadonlyMap<string, Challenge>) {
+    this.catalog = catalog;
   }
 
   async init(s: GameSnapshot): Promise<void> {

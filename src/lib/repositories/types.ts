@@ -1,5 +1,6 @@
 import type {
   CardDiscovery,
+  Challenge,
   ChallengeAttempt,
   ChallengeEvidence,
   DeckState,
@@ -42,6 +43,11 @@ export interface ExportBundle {
 export interface GameRepository {
   readonly kind: "local";
   load(): Promise<GameSnapshot | null>;
+  /** Last catalogue downloaded from the backend, for offline starts. */
+  loadCatalog(): Promise<Challenge[] | null>;
+  saveCatalog(catalog: Challenge[]): Promise<void>;
+  /** Replaces the catalogue used to resolve rewards. */
+  setCatalog(catalog: ReadonlyMap<string, Challenge>): void;
   init(snapshot: GameSnapshot): Promise<void>;
   saveProfile(profile: UserProfile): Promise<void>;
   saveSettings(settings: UserSettings): Promise<void>;
